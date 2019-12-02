@@ -7,6 +7,7 @@ import numpy as np
 
 flair_sentiment = flair.models.TextClassifier.load('en-sentiment')
 fmt = '%Y-%m-%d %H:00:00'
+sid = SentimentIntensityAnalyzer()
 
 
 def get_sentiment_val_for_flair(sentiments):
@@ -44,6 +45,11 @@ def get_sentiment_report(input_filename, output_filename):
         tb_sentiment_subjectivity_dict = dict()
         flair_sentiment_dict = dict()
 
+        sid_pos_dict = dict()
+        sid_neg_dict = dict()
+        sid_neu_dict = dict()
+        sid_com_dict = dict()
+
         data = row['text']
         print(row_i)
         print(data[0:15])
@@ -56,6 +62,12 @@ def get_sentiment_report(input_filename, output_filename):
         tb_sentiment_polarity_dict[str(row_i)] = TextBlob(data).sentiment[0]
         tb_sentiment_subjectivity_dict[str(row_i)] = TextBlob(data).sentiment[1]
 
+        ss = sid.polarity_scores(data)
+        sid_pos_dict[str(row_i)] = ss['pos']
+        sid_neg_dict[str(row_i)] = ss['neg']
+        sid_neu_dict[str(row_i)] = ss['neu']
+        sid_com_dict[str(row_i)] = ss['compound']
+
         flair_df = pd.DataFrame.from_dict(flair_sentiment_dict, orient='index', columns=['reddit_flair'])
         flair_df.index.name = 'timestamp'
 
@@ -67,7 +79,24 @@ def get_sentiment_report(input_filename, output_filename):
                                                     columns=['reddit_tb_subjectivity'])
         tb_subjectivity_df.index.name = 'timestamp'
 
-        final_senti_df = pd.concat([flair_df, tb_polarity_df, tb_subjectivity_df], axis=1)
+        sid_pos_df = pd.DataFrame.from_dict(sid_pos_dict, orient='index',
+                                            columns=['reddit_sid_pos'])
+        sid_pos_df.index.name = 'timestamp'
+
+        sid_neg_df = pd.DataFrame.from_dict(sid_neg_dict, orient='index',
+                                            columns=['reddit_sid_neg'])
+        sid_neg_df.index.name = 'timestamp'
+
+        sid_neu_df = pd.DataFrame.from_dict(sid_neu_dict, orient='index',
+                                            columns=['reddit_sid_neu'])
+        sid_neu_df.index.name = 'timestamp'
+
+        sid_com_df = pd.DataFrame.from_dict(sid_com_dict, orient='index',
+                                            columns=['reddit_sid_com'])
+        sid_com_df.index.name = 'timestamp'
+
+        final_senti_df = pd.concat([flair_df, tb_polarity_df, tb_subjectivity_df, sid_pos_df, sid_neg_df, sid_neu_df,
+        							sid_com_df], axis=1)
 
         if os.path.exists(output_filename):
             keep_header = False
@@ -117,6 +146,10 @@ def bucketize_sentiment_report(input_filename, output_filename):
     out_df['reddit_tb_polarity_count'] = 0
     out_df['reddit_tb_subjectivity'] = 0
     out_df['reddit_tb_subjectivity_count'] = 0
+    out_df['reddit_sid_neg'] = 0
+    out_df['reddit_sid_neu'] = 0
+    out_df['reddit_sid_com'] = 0
+    out_df['reddit_sid_count'] = 0
 
     for i in range(len(in_df)):
         timestamp = in_df.loc[i, 'timestamp']
@@ -133,6 +166,11 @@ def bucketize_sentiment_report(input_filename, output_filename):
             out_df.loc[out_key, 'reddit_tb_polarity_count'] += 1
             out_df.loc[out_key, 'reddit_tb_subjectivity'] += in_df.loc[i, 'reddit_tb_subjectivity']
             out_df.loc[out_key, 'reddit_tb_subjectivity_count'] += 1
+            out_df.loc[out_key, 'reddit_sid_pos'] += in_df.loc[i, 'reddit_sid_pos']
+            out_df.loc[out_key, 'reddit_sid_neg'] += in_df.loc[i, 'reddit_sid_neg']
+            out_df.loc[out_key, 'reddit_sid_neu'] += in_df.loc[i, 'reddit_sid_neu']
+            out_df.loc[out_key, 'reddit_sid_com'] += in_df.loc[i, 'reddit_sid_com']
+            out_df.loc[out_key, 'reddit_sid_count'] += 1
         except:
             pass
 
@@ -158,12 +196,23 @@ def bucketize_sentiment_report(input_filename, output_filename):
         else:
             out_df.loc[i, 'reddit_tb_subjectivity'] /= out_df.loc[i, 'reddit_tb_subjectivity_count']
 
+        if out_df.loc[i, 'reddit_sid_count'] == 0:
+            out_df.loc[i, 'reddit_sid_pos'] = 0
+            out_df.loc[i, 'reddit_sid_neg'] = 0
+            out_df.loc[i, 'reddit_sid_neu'] = 0
+            out_df.loc[i, 'reddit_sid_com'] = 0
+        else:
+            out_df.loc[i, 'reddit_sid_pos'] /= out_df.loc[i, 'reddit_sid_count']
+            out_df.loc[i, 'reddit_sid_neg'] /= out_df.loc[i, 'reddit_sid_count']
+            out_df.loc[i, 'reddit_sid_neu'] /= out_df.loc[i, 'reddit_sid_count']
+            out_df.loc[i, 'reddit_sid_com'] /= out_df.loc[i, 'reddit_sid_count']
+
         if os.path.exists(output_filename):
             keep_header = False
         else:
             keep_header = True
 
-    out_df.drop(['reddit_flair_count', 'reddit_tb_polarity_count', 'reddit_tb_subjectivity_count'], axis=1,
+    out_df.drop(['reddit_flair_count', 'reddit_tb_polarity_count', 'reddit_tb_subjectivity_count','reddit_sid_count'], axis=1,
                 inplace=True)
     # change back index to timestamp to save the data in csv
     out_df.set_index('timestamp', inplace=True)
