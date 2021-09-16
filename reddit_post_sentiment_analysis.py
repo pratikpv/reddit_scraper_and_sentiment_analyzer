@@ -146,6 +146,7 @@ def bucketize_sentiment_report(input_filename, output_filename):
     out_df['reddit_tb_polarity_count'] = 0
     out_df['reddit_tb_subjectivity'] = 0
     out_df['reddit_tb_subjectivity_count'] = 0
+    out_df['reddit_sid_pos'] = 0
     out_df['reddit_sid_neg'] = 0
     out_df['reddit_sid_neu'] = 0
     out_df['reddit_sid_com'] = 0
