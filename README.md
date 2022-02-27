@@ -1,6 +1,6 @@
 # Reddit posts scraper and sentiment analyzer using python
 
-## Summery:
+## Summary:
 A web-crawler/scraper script to fetch reddit posts and save them in CSV files. Search is performed with given keywords in specific subreddits to fetch the reddit posts. Performs sentiment analysis to quantify the posts using pre-trained sentiment analysis models like Flair, Textblob and VADER. The results are saved in CSV.
 
 #
