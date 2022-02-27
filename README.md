@@ -1,5 +1,9 @@
 # Reddit posts scraper and sentiment analyzer using python
 
+## Summery:
+A web-crawler/scraper script to fetch reddit posts and save them in CSV files. Search is performed with given keywords in specific subreddits to fetch the reddit posts. Performs sentiment analysis to quantify the posts using pre-trained sentiment analysis models like Flair, Textblob and VADER. The results are saved in CSV.
+
+#
 download_data_from_reddit.py 
 * Is a scraper script which can search reddit post using keywords, in a subreddit of interest.
 * It uses pushshift api from https://api.pushshift.io/. There is no need get API secret keys from reddit.com to use pushshift APIs (as of this writing).
@@ -17,6 +21,8 @@ reddit_post_sentiment_analysis.py
 * Sample data generated finaly looks like this.
   ![alt text](https://github.com/pratikpv/reddit_scraper_and_sentiment_analyzer/blob/master/sample_reddit_data_sentiment_bucketized.png)
 
+#
+This framework is used in https://github.com/pratikpv/predicting_bitcoin_market
 #
 Credits:
 Code from https://medium.com/@RareLoot/using-pushshifts-api-to-extract-reddit-submissions-fb517b286563 is referenced as base to write scraper code.
